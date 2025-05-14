@@ -1,0 +1,70 @@
+# 1_iam-policy.yaml
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: Policy
+metadata:
+  name: gitlab-runner-policy
+spec:
+  forProvider:
+    name: gitlab-runner-policy
+    path: "/"
+    policy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Action": [
+              "ec2:*",
+              "eks:*",
+              "cloudformations:*",        
+              "ecr:*",
+              "s3:*",
+              "logs:*",
+              "iam:PassRole"
+            ],
+            "Resource": "*"
+          }
+        ]
+      }
+  providerConfigRef:
+    name: provider-aws
+
+# 2_iam-role.yaml
+
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: Role
+metadata:
+  name: gitlab-runner-role
+spec:
+  forProvider:
+    name: gitlab-runner-role
+    assumeRolePolicyDocument: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "ec2.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+  providerConfigRef:
+    name: provider-aws
+
+
+# 3_iam-attachment.yaml
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: gitlab-runner-role-attachment
+spec:
+  forProvider:
+    role: gitlab-runner-role
+    policyArnRef:
+      name: gitlab-runner-policy
+  providerConfigRef:
+    name: provider-aws
+
